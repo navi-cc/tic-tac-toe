@@ -1,7 +1,9 @@
 const gameBoard = function () {
+    let selectedCellHasMark = false;
     let rows = 3;
     let columns = 3;
     const board = [];
+
 
     for (let i = 0; i < rows; i++) {
         board[i] = [];
@@ -13,20 +15,29 @@ const gameBoard = function () {
 
     const getCurrentBoard = () => board;
 
+    const getCellBoolean = () =>  selectedCellHasMark;
+
     const updateBoard = (currentToken, selectedRow, selectedColumn) => {
-        const selectedCellHasMark = board.filter(currentRow => board.indexOf(currentRow) === selectedRow)
+        selectedCellHasMark = board.filter(currentRow => board.indexOf(currentRow) === selectedRow)
         .reduce((value, currentRow) => {
 
             value = currentRow.some((currentCell, index) => {
                 if (index !== selectedColumn) return;
-                if (currentCell.getCurrentValue() === 'x' || currentCell.getCurrentValue() === 'o') return true;
+
+                let cellValue = currentCell.getCurrentValue();
+                if (cellValue === 'x' || cellValue === 'o')
+                     return true;
             });
 
             return value;
         }, null);
 
-        if (selectedCellHasMark) return;
-        board[selectedRow][selectedColumn].addPlayerToken(currentToken);
+        if (selectedCellHasMark) {
+            console.log("Selected cell already has mark");
+            return;
+        }
+    
+        board[selectedRow][selectedColumn].addPlayerToken(currentToken);    
     }
 
     const printNewBoard = () => {
@@ -36,6 +47,7 @@ const gameBoard = function () {
    
     return {
         getCurrentBoard,
+        getCellBoolean,
         updateBoard,
         printNewBoard
     }
@@ -54,4 +66,50 @@ const cell = function () {
         addPlayerToken, 
         getCurrentValue
     }
+}
+
+const gameController = function () {
+    const board = gameBoard();
+    let selectedCellHasMark = board.getCellBoolean;
+
+
+    const player = [{
+        name: 'Player One',
+        mark: 'x'
+    }, 
+    {
+        name: 'Player Two',
+        mark: 'o'
+    }];
+
+    let currentPlayer;
+    const switchPlayer = () => currentPlayer === player[0] ? currentPlayer = player[1] : currentPlayer = player[0];
+    const printCurrentPlayer = () => console.log(`${currentPlayer.name} turn`);
+
+    const start = () => {
+        currentPlayer = player[0];
+        printCurrentPlayer();
+        board.printNewBoard();
+    }
+
+    const playRound = function (selectedRow, selectedColumn) {
+        if (!currentPlayer) {
+            console.log('Start the game first');
+            return;
+        }
+        
+        board.updateBoard(currentPlayer.mark, selectedRow, selectedColumn);
+
+        if (selectedCellHasMark()) return;
+
+        switchPlayer();
+        printCurrentPlayer();
+        board.printNewBoard();
+    }
+
+    return {
+        start,
+        playRound,
+    }
+
 }
