@@ -75,21 +75,26 @@ const gameController = function () {
 
     const player = [{
         name: 'Player One',
-        mark: 'x'
+        mark: 'x',
+        score: 0,
     }, 
     {
         name: 'Player Two',
-        mark: 'o'
+        mark: 'o',
+        score: 0
     }];
 
     let currentPlayer;
+    let roundWinner;
     const switchPlayer = () => currentPlayer === player[0] ? currentPlayer = player[1] : currentPlayer = player[0];
     const printCurrentPlayer = () => console.log(`${currentPlayer.name} turn`);
-
+    const printScore = () => console.log(`Player 1: ${player[0].score}\nPlayer 2: ${player[1].score}`);
+    
     const start = () => {
         currentPlayer = player[0];
         printCurrentPlayer();
         board.printNewBoard();
+        printPlayerScores();
     }
 
     const playRound = function (selectedRow, selectedColumn) {
@@ -105,6 +110,69 @@ const gameController = function () {
         switchPlayer();
         printCurrentPlayer();
         board.printNewBoard();
+        setRoundWinner();
+        addScore(); 
+        printScore();
+    }
+
+    const addScore = () => {
+        if (roundWinner === player[0]) player[0].score++;
+        if (roundWinner === player[1]) player[1].score++;
+    }
+
+    const setRoundWinner = () => {
+        let pattern;
+        let currentBoard = board.getCurrentBoard();
+        let boardWithValues = currentBoard.map(row => row.map(cell => cell.getCurrentValue()));
+
+        const resetPattern = () => pattern = ''; 
+        const checkValidPattern = () => {
+            if (pattern === 'xxx') roundWinner = player[0];
+            if (pattern === 'ooo') roundWinner = player[1];
+            resetPattern();
+        } 
+
+        const checkPattern = (caseNumber, diagonalPos = 0) => {
+            switch (caseNumber) {
+                case 0:
+                    boardWithValues.map(row => {
+                        pattern = row.join('');
+                        checkValidPattern()
+                    }); 
+                    break;
+
+                case 1:
+                    boardWithValues.map((column, columnIndex) => {
+                        for (let rowIndex = 0; rowIndex < column.length; rowIndex++) {
+                            pattern += boardWithValues[rowIndex][columnIndex];
+                        }
+                        checkValidPattern()
+                    });
+                    break;
+                
+                case 2:
+                    for (let i = 0; i < 3; i++) {
+                        pattern += boardWithValues[i][diagonalPos]
+                        diagonalPos++
+                    }
+                    checkValidPattern();
+                    break;
+                
+                case 3:
+                    for (let j = 2; j >= 0; j--) {
+                        pattern += boardWithValues[j][diagonalPos]
+                        diagonalPos++
+                    }
+                    checkValidPattern();
+                    break;
+            }
+        }
+
+        for (let i = 0; i < 4; i++) {   
+            checkPattern(i);
+            if (roundWinner) break;
+        }
+
     }
 
     return {
