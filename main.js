@@ -31,25 +31,16 @@ const gameBoard = function () {
 
             return value;
         }, null);
-
-        if (selectedCellHasMark) {
-            console.log("Selected cell already has mark");
-            return;
-        }
+        
+        if (selectedCellHasMark) return;
     
         board[selectedRow][selectedColumn].addPlayerToken(currentToken);    
-    }
-
-    const printNewBoard = () => {
-        const boardWithValues = board.map(row => row.map(cells => cells.getCurrentValue()))
-        console.log(boardWithValues);
     }
    
     return {
         getCurrentBoard,
         getCellBoolean,
         updateBoard,
-        printNewBoard
     }
 
 }
@@ -84,35 +75,20 @@ const gameController = function () {
         score: 0
     }];
 
-    let currentPlayer;
+    let currentPlayer = player[0];
     let roundWinner;
     const switchPlayer = () => currentPlayer === player[0] ? currentPlayer = player[1] : currentPlayer = player[0];
-    const printCurrentPlayer = () => console.log(`${currentPlayer.name} turn`);
-    const printScore = () => console.log(`Player 1: ${player[0].score}\nPlayer 2: ${player[1].score}`);
+    const getCurrentPlayer = () => currentPlayer.name;
+    const getPlayers = () => player;
     
-    const start = () => {
-        currentPlayer = player[0];
-        printCurrentPlayer();
-        board.printNewBoard();
-        printPlayerScores();
-    }
 
-    const playRound = function (selectedRow, selectedColumn) {
-        if (!currentPlayer) {
-            console.log('Start the game first');
-            return;
-        }
-        
+    const playRound = function (selectedRow, selectedColumn) {  
         board.updateBoard(currentPlayer.mark, selectedRow, selectedColumn);
-
         if (selectedCellHasMark()) return;
 
         switchPlayer();
-        printCurrentPlayer();
-        board.printNewBoard();
         setRoundWinner();
         addScore(); 
-        printScore();
     }
 
     const addScore = () => {
@@ -120,6 +96,7 @@ const gameController = function () {
         if (roundWinner === player[1]) player[1].score++;
     }
 
+    const getRoundWinner = () => roundWinner;
     const setRoundWinner = () => {
         let pattern;
         let currentBoard = board.getCurrentBoard();
@@ -176,8 +153,88 @@ const gameController = function () {
     }
 
     return {
-        start,
         playRound,
+        getCurrentPlayer,
+        getPlayers,
+        getRoundWinner,
+        getCurrentBoard: board.getCurrentBoard,
     }
 
 }
+
+const screenController = (function () {
+    const game = gameController();
+    const player = game.getPlayers();
+
+    const gameBoard = document.querySelector('.game-board');
+    const turnAnnouncer = document.querySelector('.turn-announcer')
+    const playerScoreHolder = {
+        first: document.querySelector('.player-score-1 > .score'),
+        second: document.querySelector('.player-score-2 > .score'),
+    }
+
+    const playerNameHolder = {
+        first: document.querySelector('.player-name-1'),
+        second: document.querySelector('.player-name-2'),
+    }
+
+    const render = function() {
+        renderGameBoard();
+        renderPlayers();
+        renderScores();
+        renderCurrentPlayer();
+    }
+
+    const renderGameBoard = function() {
+        gameBoard.textContent = '';
+        const boardWithValues = game.getCurrentBoard().map(row => row.map(cell => cell.getCurrentValue()));
+        boardWithValues.map(row => {
+            row.map((cellValue, cellIndex) => {
+                let cell = document.createElement('button');
+                let dataNode = `${boardWithValues.indexOf(row)}${cellIndex}`
+                cell.className = 'cell';
+                cell.textContent = cellValue;
+                cellValue === 'x' ? cell.style.color = '#df3838' : 
+                cellValue === 'o' ? cell.style.color = '#3e3ee0' :
+                                    cell.style.color = 'transparent' 
+                cell.setAttribute('data-node', dataNode); 
+                gameBoard.appendChild(cell);
+            });
+        });
+    }
+
+    const renderScores = function () {
+        playerScoreHolder.first.textContent = player[0].score
+        playerScoreHolder.second.textContent = player[1].score
+    }
+
+    const renderPlayers = function () {
+        playerNameHolder.first.textContent = player[0].name
+        playerNameHolder.second.textContent = player[1].name
+    }
+
+    const renderCurrentPlayer = function () {
+        const currentPlayer = game.getCurrentPlayer();
+        const roundWinner = game.getRoundWinner();
+
+        if (roundWinner) {
+            turnAnnouncer.textContent = `${roundWinner.name} wins this round!`;
+            return;
+        }
+
+        turnAnnouncer.textContent = `${currentPlayer} turn`;
+    }
+
+    const gameHandler = function (e) {
+        if (e.target.className != 'cell') return;
+        const cell = e.target
+        let [selectedRow, selectedColumn] = cell.getAttribute('data-node');
+        selectedRow = parseInt(selectedRow);
+        selectedColumn = parseInt(selectedColumn);
+        game.playRound(selectedRow, selectedColumn);
+        render();
+    }
+
+    gameBoard.addEventListener('mousedown', gameHandler)
+    render()
+})();
