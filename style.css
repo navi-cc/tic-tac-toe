@@ -46,7 +46,7 @@ body {
     width: 50%;
 }
 
-.turn-announcer {
+.announcer {
     letter-spacing: 2px;
     font-size: 1.3rem;
     text-transform: uppercase;
