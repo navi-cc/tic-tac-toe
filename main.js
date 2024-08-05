@@ -81,11 +81,13 @@ const gameController = function () {
     let currentPlayer = player[0];
     let turnCount = 0;
     let roundWinner;
+    let gameWinner;
     const switchPlayer = () => currentPlayer === player[0] ? currentPlayer = player[1] : currentPlayer = player[0];
     const getCurrentPlayer = () => currentPlayer.name;
     const getPlayers = () => player;
     const getTurnCount = () => turnCount;
     const getRoundWinner = () => roundWinner;
+    const getGameWinner = () => gameWinner;
     
 
     const playRound = function (selectedRow, selectedColumn) {  
@@ -95,12 +97,23 @@ const gameController = function () {
         switchPlayer();
         setRoundWinner();
         addScore();     
+        checkGameWinner();
         turnCount++
     }
 
     const addScore = () => {
         if (roundWinner === player[0]) player[0].score++;
         if (roundWinner === player[1]) player[1].score++;
+    }
+
+    const setNewGame = function () {
+        currentPlayer = player[0];
+        turnCount = 0;
+        roundWinner = null;
+        gameWinner = null;
+        player[0].score = 0;
+        player[1].score = 0;
+        board.createBoard();
     }
 
     const setNewRound = () => {
@@ -110,8 +123,18 @@ const gameController = function () {
     }
 
     const checkRound = () => {    
+        if (gameWinner) {
+            setNewGame();
+            return;
+        }
+
         if (roundWinner) setNewRound();
         if (!roundWinner && turnCount === 9) setNewRound();
+    }
+
+    const checkGameWinner = () => {
+        if (player[0].score === 3) gameWinner = player[0].name;
+        if (player[1].score === 3) gameWinner = player[1].name;
     }
 
     const setRoundWinner = () => {
@@ -175,6 +198,7 @@ const gameController = function () {
         getCurrentPlayer,
         getPlayers,
         getRoundWinner,
+        getGameWinner,
         getTurnCount,
         getCurrentBoard: board.getCurrentBoard,
     }
@@ -184,9 +208,10 @@ const gameController = function () {
 const screenController = (function () {
     const game = gameController();
     const player = game.getPlayers();
+    const hasGameWinner = game.getGameWinner;
 
     const gameBoard = document.querySelector('.game-board');
-    const turnAnnouncer = document.querySelector('.turn-announcer');
+    const announcer = document.querySelector('.announcer');
     const playerScoreHolder = {
         first: document.querySelector('.player-score-1 > .score'),
         second: document.querySelector('.player-score-2 > .score'),
@@ -203,6 +228,7 @@ const screenController = (function () {
         renderScores();
         renderCurrentPlayer();
         renderRoundWinner();
+        renderGameWinner();
     }
 
     const renderGameBoard = function() {
@@ -235,36 +261,53 @@ const screenController = (function () {
 
     const renderCurrentPlayer = function () {
         const currentPlayer = game.getCurrentPlayer();
-        turnAnnouncer.textContent = `${currentPlayer} turn`;
+        announcer.textContent = `${currentPlayer} turn`;
     }
 
     const renderRoundWinner = function () {
+        if (hasGameWinner()) return;
+
         const roundWinner = game.getRoundWinner();
         const turnCount = game.getTurnCount();
         const MAX_TURN = 9;
     
-        if (!roundWinner && turnCount === MAX_TURN) {
-            turnAnnouncer.textContent = 'DRAW';
-            restartBoard();
-            return;
-        }
+        if (!roundWinner && turnCount === MAX_TURN) 
+            announcer.textContent = 'DRAW';
         
-        if (roundWinner) {
-            turnAnnouncer.textContent = `${roundWinner.name} wins this round!`;
-            restartBoard()
-            return;
-        }
+        if (roundWinner) 
+            announcer.textContent = `${roundWinner.name} wins this round!`;
+            
+        if ((!roundWinner && turnCount === MAX_TURN) || roundWinner) 
+            restartBoard();
 
     }
 
-    const restartBoard = function () {
+    renderGameWinner = function () {
+        const gameWinner = game.getGameWinner();
+        if (!gameWinner) return;
+
+        announcer.textContent = `${gameWinner} wins the game!`;
+        restartBoard(gameWinner)
+    }
+
+
+    const restartBoard = function (gameWinner) {
         disableGameBoard();
+
+        if (gameWinner) {
+            setTimeout(() => {
+                game.checkRound();
+                render();
+            }, 2000)
+            
+            return
+        }
 
         setTimeout(() => {
             game.checkRound();
             renderGameBoard();
             renderCurrentPlayer();
-        }, 3000)
+        }, 1000)
     }
 
     const disableGameBoard = function () {
