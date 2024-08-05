@@ -282,7 +282,7 @@ const screenController = (function () {
 
     }
 
-    renderGameWinner = function () {
+    const renderGameWinner = function () {
         const gameWinner = game.getGameWinner();
         if (!gameWinner) return;
 
@@ -290,6 +290,11 @@ const screenController = (function () {
         restartBoard(gameWinner)
     }
 
+    const renderPerRound = function () {
+        game.checkRound();
+        renderGameBoard();
+        renderCurrentPlayer();
+    }
 
     const restartBoard = function (gameWinner) {
         disableGameBoard();
@@ -303,11 +308,7 @@ const screenController = (function () {
             return
         }
 
-        setTimeout(() => {
-            game.checkRound();
-            renderGameBoard();
-            renderCurrentPlayer();
-        }, 1000)
+        setTimeout(renderPerRound, 1000)
     }
 
     const disableGameBoard = function () {
@@ -318,10 +319,8 @@ const screenController = (function () {
     const gameHandler = function (e) {
         if (e.target.className != 'cell') return;
         const cell = e.target;
-        let [selectedRow, selectedColumn] = cell.getAttribute('data-node');
-        selectedRow = parseInt(selectedRow);
-        selectedColumn = parseInt(selectedColumn);
-        game.playRound(selectedRow, selectedColumn);
+        const [selectedRow, selectedColumn] = cell.getAttribute('data-node');
+        game.playRound(parseInt(selectedRow), parseInt(selectedColumn));
         render();
     }
 
