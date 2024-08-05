@@ -4,18 +4,18 @@ const gameBoard = function () {
     let columns = 3;
     const board = [];
 
+    const getCurrentBoard = () => board;
+    const getCellBoolean = () =>  selectedCellHasMark;
 
-    for (let i = 0; i < rows; i++) {
-        board[i] = [];
-
-        for (let j = 0; j < columns; j++) {
-            board[i].push(cell())
+    const createBoard = () => {
+        for (let i = 0; i < rows; i++) {
+            board[i] = [];
+    
+            for (let j = 0; j < columns; j++) {
+                board[i].push(cell())
+            }
         }
     }
-
-    const getCurrentBoard = () => board;
-
-    const getCellBoolean = () =>  selectedCellHasMark;
 
     const updateBoard = (currentToken, selectedRow, selectedColumn) => {
         selectedCellHasMark = board.filter(currentRow => board.indexOf(currentRow) === selectedRow)
@@ -37,10 +37,13 @@ const gameBoard = function () {
         board[selectedRow][selectedColumn].addPlayerToken(currentToken);    
     }
    
+    createBoard();
+
     return {
         getCurrentBoard,
         getCellBoolean,
         updateBoard,
+        createBoard,
     }
 
 }
@@ -76,10 +79,13 @@ const gameController = function () {
     }];
 
     let currentPlayer = player[0];
+    let turnCount = 0;
     let roundWinner;
     const switchPlayer = () => currentPlayer === player[0] ? currentPlayer = player[1] : currentPlayer = player[0];
     const getCurrentPlayer = () => currentPlayer.name;
     const getPlayers = () => player;
+    const getTurnCount = () => turnCount;
+    const getRoundWinner = () => roundWinner;
     
 
     const playRound = function (selectedRow, selectedColumn) {  
@@ -88,7 +94,8 @@ const gameController = function () {
 
         switchPlayer();
         setRoundWinner();
-        addScore(); 
+        addScore();     
+        turnCount++
     }
 
     const addScore = () => {
@@ -96,11 +103,21 @@ const gameController = function () {
         if (roundWinner === player[1]) player[1].score++;
     }
 
-    const getRoundWinner = () => roundWinner;
+    const setNewRound = () => {
+        roundWinner = null;
+        turnCount = 0;
+        board.createBoard()
+    }
+
+    const checkRound = () => {    
+        if (roundWinner) setNewRound();
+        if (!roundWinner && turnCount === 9) setNewRound();
+    }
+
     const setRoundWinner = () => {
         let pattern;
         let currentBoard = board.getCurrentBoard();
-        let boardWithValues = currentBoard.map(row => row.map(cell => cell.getCurrentValue()));
+        boardWithValues = currentBoard.map(row => row.map(cell => cell.getCurrentValue()));
 
         const resetPattern = () => pattern = ''; 
         const checkValidPattern = () => {
@@ -154,9 +171,11 @@ const gameController = function () {
 
     return {
         playRound,
+        checkRound,
         getCurrentPlayer,
         getPlayers,
         getRoundWinner,
+        getTurnCount,
         getCurrentBoard: board.getCurrentBoard,
     }
 
@@ -167,7 +186,7 @@ const screenController = (function () {
     const player = game.getPlayers();
 
     const gameBoard = document.querySelector('.game-board');
-    const turnAnnouncer = document.querySelector('.turn-announcer')
+    const turnAnnouncer = document.querySelector('.turn-announcer');
     const playerScoreHolder = {
         first: document.querySelector('.player-score-1 > .score'),
         second: document.querySelector('.player-score-2 > .score'),
@@ -183,20 +202,21 @@ const screenController = (function () {
         renderPlayers();
         renderScores();
         renderCurrentPlayer();
+        renderRoundWinner();
     }
 
     const renderGameBoard = function() {
         gameBoard.textContent = '';
         const boardWithValues = game.getCurrentBoard().map(row => row.map(cell => cell.getCurrentValue()));
-        boardWithValues.map(row => {
-            row.map((cellValue, cellIndex) => {
+        boardWithValues.map((row, rowIndex) => {
+            row.map((cellValue, columnIndex) => {
                 let cell = document.createElement('button');
-                let dataNode = `${boardWithValues.indexOf(row)}${cellIndex}`
+                let dataNode = `${rowIndex}${columnIndex}`
                 cell.className = 'cell';
                 cell.textContent = cellValue;
                 cellValue === 'x' ? cell.style.color = '#df3838' : 
                 cellValue === 'o' ? cell.style.color = '#3e3ee0' :
-                                    cell.style.color = 'transparent' 
+                                    cell.style.color = 'transparent'; 
                 cell.setAttribute('data-node', dataNode); 
                 gameBoard.appendChild(cell);
             });
@@ -204,30 +224,57 @@ const screenController = (function () {
     }
 
     const renderScores = function () {
-        playerScoreHolder.first.textContent = player[0].score
-        playerScoreHolder.second.textContent = player[1].score
+        playerScoreHolder.first.textContent = player[0].score;
+        playerScoreHolder.second.textContent = player[1].score;
     }
 
     const renderPlayers = function () {
-        playerNameHolder.first.textContent = player[0].name
-        playerNameHolder.second.textContent = player[1].name
+        playerNameHolder.first.textContent = player[0].name;
+        playerNameHolder.second.textContent = player[1].name;
     }
 
     const renderCurrentPlayer = function () {
         const currentPlayer = game.getCurrentPlayer();
-        const roundWinner = game.getRoundWinner();
+        turnAnnouncer.textContent = `${currentPlayer} turn`;
+    }
 
+    const renderRoundWinner = function () {
+        const roundWinner = game.getRoundWinner();
+        const turnCount = game.getTurnCount();
+        const MAX_TURN = 9;
+    
+        if (!roundWinner && turnCount === MAX_TURN) {
+            turnAnnouncer.textContent = 'DRAW';
+            restartBoard();
+            return;
+        }
+        
         if (roundWinner) {
             turnAnnouncer.textContent = `${roundWinner.name} wins this round!`;
+            restartBoard()
             return;
         }
 
-        turnAnnouncer.textContent = `${currentPlayer} turn`;
+    }
+
+    const restartBoard = function () {
+        disableGameBoard();
+
+        setTimeout(() => {
+            game.checkRound();
+            renderGameBoard();
+            renderCurrentPlayer();
+        }, 3000)
+    }
+
+    const disableGameBoard = function () {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => cell.removeAttribute('data-node'));
     }
 
     const gameHandler = function (e) {
         if (e.target.className != 'cell') return;
-        const cell = e.target
+        const cell = e.target;
         let [selectedRow, selectedColumn] = cell.getAttribute('data-node');
         selectedRow = parseInt(selectedRow);
         selectedColumn = parseInt(selectedColumn);
@@ -235,6 +282,6 @@ const screenController = (function () {
         render();
     }
 
-    gameBoard.addEventListener('mousedown', gameHandler)
-    render()
+    gameBoard.onmousedown = gameHandler;
+    render();
 })();
