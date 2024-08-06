@@ -19,6 +19,48 @@ body {
     position: relative;
 }
 
+button {
+    cursor: pointer;
+}
+
+.main-menu.inactive {
+    transform: scale(0);
+}
+
+.main-menu {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5rem 0px;
+
+    transform: scale(1);
+
+    transition: .2s;
+}
+
+.game-title {
+    font-size: 5rem;
+    color: rgb(225, 233, 233);
+}
+
+#play-btn {
+    font-size: 1.4rem;
+    font-family: inherit;
+
+    border: none;
+    border-radius: 10px;
+    padding: 10px 30px;
+    align-self: center;
+
+    transition: .2s;
+}
+
+#play-btn:hover {
+    color: rgb(228, 215, 215);
+    background-color: rgb(2, 116, 2);
+}
+
 .score-holder {
     display: flex;
     align-items: center;
@@ -28,6 +70,16 @@ body {
     font-size: 3rem;
     text-transform: uppercase;
     color: rgb(221, 209, 209)
+}
+
+.score-holder.active,
+.main-container.active {
+    visibility: visible;
+}
+
+.score-holder,
+.main-container {
+    visibility: hidden;
 }
 
 .player-score-1 {
@@ -95,15 +147,13 @@ body {
 }
 
 .modal button {
+    font-family: inherit;
     font-size: 1.1rem;
+
     border: none;
     border-radius: 10px;
     background-color: rgb(228, 215, 215);
     padding: 7px 15px;
-
-    cursor: pointer;
-
-    font-family: inherit;
 
     transition: .2s;
 }
@@ -132,7 +182,6 @@ body {
 }
 
 .cell {
-    cursor: pointer;
     aspect-ratio: 1;
     background-color: transparent;
     border: solid 3px rgb(221, 209, 209);
