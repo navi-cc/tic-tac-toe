@@ -15,6 +15,8 @@ body {
     min-height: 100dvh;
     background-color: rgb(27, 26, 26);
     font-family: Impact, sans-serif, system-ui;
+
+    position: relative;
 }
 
 .score-holder {
@@ -51,6 +53,77 @@ body {
     font-size: 1.3rem;
     text-transform: uppercase;
     color: rgb(35, 196, 83);
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background-color: #252727ed;
+    visibility: hidden;
+
+    transition: .2s;
+}
+
+.overlay.active {
+    visibility: visible;
+}
+
+.modal.active {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    font-size: 3rem;
+    color: rgb(228, 215, 215);
+
+    background-color: rgba(0, 0, 0, 0.61);
+    border-radius: 20px;
+    padding: 40px;
+    gap: 20px 0px;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%) scale(0);
+
+    transition: .3s;
+}
+
+.modal button {
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 10px;
+    background-color: rgb(228, 215, 215);
+    padding: 7px 15px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    transition: .2s;
+}
+
+.button-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0px 10px;
+}
+
+.modal button:hover {
+    color: rgb(228, 215, 215);
+}
+
+#confirm-btn:hover {
+    background-color: rgb(2, 116, 2);
+}
+
+#back-btn:hover {
+    background-color: rgb(114, 112, 5);
 }
 
 .game-board {
