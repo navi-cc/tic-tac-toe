@@ -210,6 +210,10 @@ const screenController = (function () {
     const player = game.getPlayers();
     const hasGameWinner = game.getGameWinner;
 
+    const menu = document.querySelector('.main-menu');
+    const playButton = document.querySelector('#play-btn');
+    const mainContainer = document.querySelector('.main-container');
+    const mainScoreHolder = document.querySelectorAll('.score-holder');
     const gameBoard = document.querySelector('.game-board');
     const announcer = document.querySelector('.announcer');
     const playerScoreHolder = {
@@ -331,6 +335,21 @@ const screenController = (function () {
         render();
     }
 
+    const showMainMenu = function () {
+        menu.classList.remove('inactive');
+        modal.backdrop.classList.remove('active');
+        modal.message.classList.remove('active');
+        mainContainer.classList.remove('active');
+        mainScoreHolder.forEach(scoreHolder => scoreHolder.classList.remove('active'));
+    }
+
+    const showGame = function () {
+        menu.classList.add('inactive')
+        mainContainer.classList.add('active');
+        mainScoreHolder.forEach(scoreHolder => scoreHolder.classList.add('active'));
+        render();
+    }
+
     const gameHandler = function (e) {
         if (e.target.className != 'cell') return;
         const cell = e.target;
@@ -339,7 +358,8 @@ const screenController = (function () {
         render();
     }
 
+    playButton.onmousedown = showGame;
+    modal.backButton.onmousedown = showMainMenu;
     modal.confirmButton.onmousedown = newGameHandler;
     gameBoard.onmousedown = gameHandler;
-    render();
 })();
