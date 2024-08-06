@@ -222,6 +222,13 @@ const screenController = (function () {
         second: document.querySelector('.player-name-2'),
     }
 
+    const modal = {
+        backdrop: document.querySelector('.overlay'),
+        message: document.querySelector('.modal'),
+        confirmButton: document.querySelector('#confirm-btn'),
+        backButton: document.querySelector('#back-btn'),
+    }
+
     const render = function() {
         renderGameBoard();
         renderPlayers();
@@ -300,20 +307,28 @@ const screenController = (function () {
         disableGameBoard();
 
         if (gameWinner) {
-            setTimeout(() => {
-                game.checkRound();
-                render();
-            }, 2000)
-            
+            setTimeout(game.checkRound, 1000)
+            setTimeout(showModal, 1500)
             return
         }
 
         setTimeout(renderPerRound, 1000)
     }
 
+    const showModal = function () {
+        modal.backdrop.classList.add('active');
+        modal.message.classList.add('active');
+    }
+
     const disableGameBoard = function () {
         const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => cell.removeAttribute('data-node'));
+    }
+
+    const newGameHandler = function () {
+        modal.backdrop.classList.remove('active');
+        modal.message.classList.remove('active');
+        render();
     }
 
     const gameHandler = function (e) {
@@ -324,6 +339,7 @@ const screenController = (function () {
         render();
     }
 
+    modal.confirmButton.onmousedown = newGameHandler;
     gameBoard.onmousedown = gameHandler;
     render();
 })();
